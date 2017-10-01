@@ -13,6 +13,7 @@ from multiprocessing import Process, Queue, Pipe
 from server import subwidgets
 
 widgets = {'A', 'B', '1', '2'}
+valid = 0
 
 client_conn, server_conn = Pipe()
 server = Process(target=subwidgets, args=(server_conn,))
@@ -26,11 +27,16 @@ while(True):
 		print('Exiting program')
 		exit()
 	# request widget type
-	type = input('Select your Widget type A, B, 1, 2: ')
-	#check if valid widget
-	if (type in widgets) is False:
-		print('Not a valid widget type, start over')
-		continue
+	while(valid == 0):
+		type = input('Select your Widget type A, B, 1, 2: ')
+		#check if valid widget
+		if (type in widgets) is False:
+			print('Not a valid widget type, reselect:')
+		else:
+			valid = 1
+
+	# reset check
+	valid = 0
 
 	# get the time widget created
 	ts = time.time()
@@ -41,11 +47,19 @@ while(True):
 
   	# read subwidgets from server
 	subwidgets_list = client_conn.recv()
-	print(subwidgets_list)
 
-	# display subwidgets to user
-	print('Choose a subwidget for ', name)
-	subtype = input(subwidgets_list[type])
+	# request subwidget type
+	while(valid == 0):
+		print('Choose a subwidget for ', name)
+		subtype = input(subwidgets_list[type])
+		# check if valid subtype
+		if(subtype in subwidgets_list[type]) is False:
+			print('Not a valid subwidget type, reselect:')
+		else:
+			valid = 1
+
+	# reset check
+	valid = 0
 
 	# pass information back to server
 	client_conn.send([str(name), str(type), str(formattime), str(subtype)])
